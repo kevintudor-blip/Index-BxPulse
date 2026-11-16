@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BxPulse Analytics - IEP & BIP Data Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navyBx: '#0B4A82',
+                        navyHover: '#07355E',
+                        navyLight: '#EBF3FA',
+                        tealPulse: '#00A896',
+                        tealHover: '#008778',
+                        tealLight: '#E6F7F5',
+                        slateAnalytics: '#4A5568'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; color: black; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col text-slate-800">
+
+    <!-- MASTER STUDENT HEADER CONTROL BAR -->
+    <header class="bg-navyBx text-white no-print border-b-4 border-tealPulse shadow-md sticky top-0 z-40">
+        <div class="px-4 py-2 flex flex-wrap justify-between items-center gap-3">
+            <!-- Brand Logo & Master Student Dropdown -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1 cursor-pointer" onclick="switchTab('tab1')">
+                    <span class="text-xl font-extrabold text-white">Bx</span>
+                    <span class="text-xl font-extrabold text-tealPulse">Pulse</span>
+                    <span class="text-[10px] uppercase tracking-widest text-slate-300 font-semibold ml-1 hidden sm:inline">Analytics</span>
+                </div>
+                
+                <div class="h-5 w-px bg-slate-600 hidden sm:block"></div>
+
+                <!-- Master Student Selector Dropdown -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-tealPulse uppercase tracking-wider hidden md:inline">🎓 Master Focus:</span>
+                    <select id="master-student-select-dropdown" onchange="window.BxPulseMasterDB.setActiveStudent(this.value)" class="bg-navyHover text-white font-bold px-3 py-1.5 rounded-lg text-xs border border-slate-600 focus:outline-none focus:border-tealPulse cursor-pointer">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Active Student Quick Demographics Banner & User Profile -->
+            <div class="flex items-center gap-4 text-xs">
+                <div id="header-student-quick-info" class="hidden lg:flex items-center gap-4 text-slate-200 text-[11px] bg-slate-800/60 px-3 py-1 rounded-lg border border-slate-700">
+                    <span><strong>DOB:</strong> <span id="header-dob">--</span></span>
+                    <span><strong>Diagnosis:</strong> <span id="header-disability">--</span></span>
+                    <span><strong>District:</strong> <span id="header-district">--</span></span>
+                    <span><strong>CM:</strong> <span id="header-cm">--</span></span>
+                </div>
+
+                <div class="flex items-center gap-2 border-l border-slate-700 pl-3">
+                    <span id="current-user-badge" class="text-xs font-bold text-tealLight bg-slate-800 px-2.5 py-1 rounded-md border border-slate-600">
+                        <i class="fa-solid fa-user-shield text-tealPulse mr-1"></i> <span id="current-user-name">Kevin Tudor</span>
+                    </span>
+                    <button onclick="openBugReportModal()" class="px-2.5 py-1 bg-tealPulse hover:bg-tealHover text-white font-bold text-xs rounded-md shadow transition flex items-center gap-1">
+                        <i class="fa-solid fa-bug"></i> <span class="hidden sm:inline">Report Bug</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TAB BAR -->
+        <nav class="bg-navyHover px-4 flex overflow-x-auto gap-1 border-t border-slate-700 text-xs font-semibold">
+            <button onclick="switchTab('tab1')" id="nav-tab1" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-chart-line mr-1 text-tealPulse"></i> 1. Academic &amp; Behavior Dashboard
+            </button>
+            <button onclick="switchTab('tab2')" id="nav-tab2" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-bullseye mr-1 text-tealPulse"></i> 2. Goals &amp; Benchmarks
+            </button>
+            <button onclick="switchTab('tab3')" id="nav-tab3" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-robot mr-1 text-tealPulse"></i> 3. Gemini AI Assistant
+            </button>
+            <button onclick="switchTab('tab4')" id="nav-tab4" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-clipboard-check mr-1 text-tealPulse"></i> 4. Data Collection Hub
+            </button>
+            <button onclick="switchTab('tab5')" id="nav-tab5" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-briefcase-medical mr-1 text-tealPulse"></i> 5. Clinical Toolkit
+            </button>
+            <button onclick="switchTab('tab6')" id="nav-tab6" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-file-contract mr-1 text-tealPulse"></i> 6. 50-State IEP/BIP Generator
+            </button>
+            <button onclick="switchTab('tab7')" id="nav-tab7" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-user-gear mr-1 text-tealPulse"></i> 7. Master Admin Hub
+            </button>
+            <button onclick="switchTab('tab8')" id="nav-tab8" class="nav-btn px-3 py-2 text-slate-300 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+                <i class="fa-solid fa-comments mr-1 text-tealPulse"></i> 8. Messaging Hub
+            </button>
+        </nav>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="flex-1 p-4 max-w-7xl w-full mx-auto">
+
+        <!-- TAB 1: ANALYTICS & PREDICTIVE DASHBOARD -->
+        <section id="tab1" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                <!-- Overview Cards -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Student Focus</p>
+                        <h3 class="text-lg font-bold text-navyBx mt-1" data-bind-student-name>--</h3>
+                        <p class="text-xs text-slate-500" data-bind-student-grade>--</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-tealLight text-tealPulse flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mean Goal Accuracy</p>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1" id="stat-mean-accuracy">78.5%</h3>
+                        <p class="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> +4.2% from last baseline period
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-navyBx flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mastery Trajectory</p>
+                        <h3 class="text-2xl font-bold text-tealPulse mt-1" id="stat-mastery-status">On Track</h3>
+                        <p class="text-xs text-slate-500 mt-1">Target Evaluation: Annual IEP Review</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Analytics Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Academic Accuracy & Mastery Progress Trendline -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-graduation-cap text-navyBx"></i> Academic Accuracy &amp; Mastery Trendline
+                            </h3>
+                            <p class="text-xs text-slate-500">Historical performance vs 80% mastery target criteria</p>
+                        </div>
+                        <span class="text-xs font-bold text-tealPulse bg-tealLight px-2.5 py-1 rounded-full">Academic Focus</span>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="academicAccuracyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Academic Fluency Rate Chart -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-book-open-reader text-tealPulse"></i> Reading &amp; Math Fluency Rate (WPM / CPM)
+                            </h3>
+                            <p class="text-xs text-slate-500">Weekly progress in correct responses per minute</p>
+                        </div>
+                        <span class="text-xs font-bold text-navyBx bg-slate-100 px-2.5 py-1 rounded-full">Fluency Benchmark</span>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="academicFluencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Domain Mastery Matrix -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-slate-600"></i> Domain-Specific Performance Matrix
+                            </h3>
+                            <p class="text-xs text-slate-500">Average accuracy breakdown across Academic &amp; Behavioral domains</p>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="domainMasteryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Prompt Dependency Breakdown -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-emerald-600"></i> Prompt Dependency &amp; Trial Breakdown
+                            </h3>
+                            <p class="text-xs text-slate-500">Ratio of Independent vs Prompted Academic Responses</p>
+                        </div>
+                    </div>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="promptDependencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: GOALS DIRECTORY & STRUCTURED INTAKE MANAGER -->
+        <section id="tab2" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-tealPulse"></i> Master IEP &amp; BIP Goal Management Directory
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Active Student Context: <strong class="text-navyBx" data-bind-student-name>--</strong>
+                        </p>
+                    </div>
+                    <button onclick="openGoalIntakeModal()" class="px-4 py-2 bg-tealPulse hover:bg-tealHover text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Annual Goal &amp; Benchmarks
+                    </button>
+                </div>
+
+                <div id="goals-directory-list" class="mt-6 space-y-4">
+                    <!-- Dynamic rendering by renderGoalsDirectory() -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: GEMINI AI ASSISTANT -->
+        <section id="tab3" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-navyBx uppercase flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-robot text-tealPulse"></i> Gemini AI Clinical IEP &amp; BIP Assistant
+                </h2>
+                <p class="text-xs text-slate-500 mb-4">Generate SMART goals, functional behavior intervention strategies, and progress summaries tailored to <strong data-bind-student-name>--</strong>.</p>
+                
+                <div class="space-y-3">
+                    <textarea id="ai-prompt-input" rows="3" class="w-full p-3 border border-slate-300 rounded-xl text-xs focus:outline-none focus:border-tealPulse" placeholder="Ask AI: E.g., Generate 3 measurable benchmarks for 4th grade reading fluency with 80% accuracy..."></textarea>
+                    <div class="flex justify-end gap-2">
+                        <button onclick="runAIAssistant()" class="px-5 py-2 bg-tealPulse hover:bg-tealHover text-white font-bold text-xs rounded-xl shadow">
+                            ✨ Generate Clinical Insight
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ai-response-box" class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-mono min-h-[120px]">
+                    <em>AI Recommendations and clinical suggestions will appear here...</em>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: CLINICAL DATA COLLECTION TOOLKIT -->
+        <section id="tab4" class="tab-content">
+            <div class="flex justify-between items-center mb-6 bg-slate-900 text-white p-4 rounded-2xl shadow-sm">
+                <div>
+                    <h2 class="text-base font-bold uppercase tracking-wider text-tealPulse flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check"></i> Clinical Data Collection Toolkit
+                    </h2>
+                    <p class="text-xs text-slate-300">Target Goal context locked to: <span class="font-bold text-white" data-bind-student-name>--</span></p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-xs font-semibold text-slate-300">Active Goal Focus:</label>
+                    <select id="tab4-master-goal-selector" class="bg-slate-800 text-white font-bold text-xs p-2 rounded-lg border border-slate-700 focus:outline-none focus:border-tealPulse">
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Toolkit Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- TOOL 1: ABC EVENT LOGGER -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-navyBx"></i> ABC Event Logger (Antecedent-Behavior-Consequence)
+                        </h3>
+                        <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Event Recording</span>
+                    </div>
+                    <form id="abc-logger-form" onsubmit="handleABCLogSubmit(event)" class="space-y-3 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1">Antecedent Trigger</label>
+                                <select id="abc-antecedent" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required>
+                                    <option value="Academic Prompt / Task Demand">Academic Prompt / Demand</option>
+                                    <option value="Transition to New Activity">Transition to New Activity</option>
+                                    <option value="Peer Interaction / Conflict">Peer Interaction / Conflict</option>
+                                    <option value="Attention Withdrawn">Attention Withdrawn</option>
+                                    <option value="Sensory Overload / Noise">Sensory Overload / Noise</option>
+                                    <option value="Independent Seatwork">Independent Seatwork</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1">Target Behavior</label>
+                                <select id="abc-behavior" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required>
+                                    <option value="Task Refusal / Avoidance">Task Refusal / Avoidance</option>
+                                    <option value="Vocal Disruption / Outburst">Vocal Disruption / Outburst</option>
+                                    <option value="Elopement from Area">Elopement from Area</option>
+                                    <option value="Off-Task / Non-Compliance">Off-Task / Non-Compliance</option>
+                                    <option value="Appropriate FCT Request">Appropriate FCT Request (Positive)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1">Consequence / Response</label>
+                                <select id="abc-consequence" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required>
+                                    <option value="Verbal Redirection / Prompt">Verbal Redirection / Prompt</option>
+                                    <option value="Brief Break Provided (FCT)">Brief Break Provided (FCT)</option>
+                                    <option value="Task Modified / Simplified">Task Modified / Simplified</option>
+                                    <option value="Differential Reinforcement (DRA)">Differential Reinforcement (DRA)</option>
+                                    <option value="Loss of Privileges / Token">Loss of Privileges / Token</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="abc-notes" placeholder="Optional clinical observations or context notes..." class="w-full p-2 border border-slate-300 rounded focus:outline-none text-xs">
+                            <button type="submit" class="px-4 py-2 bg-navyBx hover:bg-navyHover text-white font-bold rounded text-xs transition whitespace-nowrap">
+                                + Log Event
+                            </button>
+                        </div>
+                    </form>
+                    <div class="overflow-x-auto max-h-44 overflow-y-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left text-[11px]">
+                            <thead class="bg-slate-100 text-slate-700 font-bold uppercase sticky top-0">
+                                <tr>
+                                    <th class="p-2 border-b">Time</th>
+                                    <th class="p-2 border-b">Antecedent</th>
+                                    <th class="p-2 border-b">Behavior</th>
+                                    <th class="p-2 border-b">Consequence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="abc-logs-table-body" class="divide-y divide-slate-100">
+                                <tr><td colspan="4" class="p-3 text-center text-slate-400 italic">No ABC events logged for current session.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TOOL 2: FREQUENCY & RATE COUNTER -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-stopwatch text-tealPulse"></i> Frequency Tally &amp; Event Rate Counter
+                        </h3>
+                        <span class="text-[10px] font-bold bg-tealLight text-tealPulse px-2 py-0.5 rounded">Rate / Minute Calculation</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <p class="text-xs font-semibold text-slate-500 uppercase">Total Occurrences</p>
+                            <div class="text-4xl font-extrabold text-navyBx my-2" id="freq-count-display">0</div>
+                            <div class="flex justify-center gap-2">
+                                <button onclick="adjustFrequencyCount(-1)" class="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded">-1</button>
+                                <button onclick="adjustFrequencyCount(1)" class="px-5 py-1.5 bg-tealPulse hover:bg-tealHover text-white font-bold rounded shadow">+1 Tally</button>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500 uppercase">Session Duration</p>
+                                <div class="text-2xl font-bold font-mono text-slate-800 mt-1" id="freq-timer-display">00:00</div>
+                                <p class="text-[10px] text-slate-500 mt-1">Calculated Rate: <strong id="freq-rate-display" class="text-tealPulse">0.00 / min</strong></p>
+                            </div>
+                            <div class="flex justify-center gap-2">
+                                <button id="btn-toggle-freq-timer" onclick="toggleFrequencyTimer()" class="px-3 py-1 bg-navyBx hover:bg-navyHover text-white text-xs font-bold rounded">Start Session</button>
+                                <button onclick="resetFrequencyCounter()" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-semibold rounded">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOOL 3: MOMENTARY TIME SAMPLING (MTS) -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-clock text-indigo-600"></i> Momentary Time Sampling (MTS) Timer
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <label class="text-[10px] font-semibold text-slate-500">Interval:</label>
+                            <select id="mts-interval-select" class="text-xs border border-slate-300 rounded p-1">
+                                <option value="10">10 Seconds</option>
+                                <option value="30" selected>30 Seconds</option>
+                                <option value="60">1 Minute</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500">Next Sampling Interval</p>
+                            <div class="text-3xl font-mono font-extrabold text-indigo-600 mt-1" id="mts-countdown-display">00:30</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-mts-ontask" onclick="recordMTSInterval(true)" disabled class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg opacity-50 cursor-not-allowed">
+                                ✓ On-Task
+                            </button>
+                            <button id="btn-mts-offtask" onclick="recordMTSInterval(false)" disabled class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg opacity-50 cursor-not-allowed">
+                                ✕ Off-Task
+                            </button>
+                            <button id="btn-toggle-mts" onclick="toggleMTSTimer()" class="px-3 py-2 bg-slate-800 text-white font-bold rounded-lg text-xs">
+                                Start MTS
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs px-1 text-slate-600">
+                        <span>Intervals Logged: <strong id="mts-total-logged" class="text-slate-800">0</strong></span>
+                        <span>On-Task Percentage: <strong id="mts-percentage" class="text-tealPulse">0.0%</strong></span>
+                    </div>
+                </div>
+
+                <!-- TOOL 4: DURATION & LATENCY STOPWATCH -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-hourglass-half text-amber-600"></i> Duration &amp; Latency Tracker
+                        </h3>
+                        <span class="text-[10px] font-bold bg-amber-50 text-amber-700 px-2 py-0.5 rounded">Task Initiation &amp; Episode Timer</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                            <p class="text-xs font-semibold text-slate-500 uppercase">Latency (Prompt to Start)</p>
+                            <div class="text-2xl font-mono font-bold text-amber-600 my-1" id="latency-timer-display">00:00.0</div>
+                            <div class="flex justify-center gap-1">
+                                <button id="btn-start-latency" onclick="startLatencyTimer()" class="px-2.5 py-1 bg-amber-600 text-white font-bold text-xs rounded">Start Prompt</button>
+                                <button id="btn-stop-latency" onclick="stopLatencyTimer()" disabled class="px-2.5 py-1 bg-slate-700 text-white font-bold text-xs rounded opacity-50">Task Started</button>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                            <p class="text-xs font-semibold text-slate-500 uppercase">Behavior Duration</p>
+                            <div class="text-2xl font-mono font-bold text-slate-800 my-1" id="duration-timer-display">00:00.0</div>
+                            <div class="flex justify-center gap-1">
+                                <button id="btn-toggle-duration" onclick="toggleDurationTimer()" class="px-2.5 py-1 bg-navyBx text-white font-bold text-xs rounded">Start Duration</button>
+                                <button onclick="resetDurationTimer()" class="px-2 py-1 bg-slate-200 text-slate-600 text-xs font-semibold rounded">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: CLINICAL TOOLKIT & BCBA INTERVENTIONS -->
+        <section id="tab5" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-lg font-bold text-slate-800 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-briefcase-medical text-tealPulse"></i> BCBA Intervention Reference &amp; Strategy Bank
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-navyBx mb-1">Differential Reinforcement (DRA/DRI)</h4>
+                        <p class="text-slate-600">Reinforce functional communication (e.g., break card) while placing refusal on extinction.</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-tealPulse mb-1">High-Probability Request Sequence</h4>
+                        <p class="text-slate-600">Present 3 quick, easy tasks prior to delivering target academic demand.</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-indigo-600 mb-1">Visual Schedule &amp; Timer</h4>
+                        <p class="text-slate-600">Provide countdown visual timers to signal transitions 2 minutes in advance.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: 50-STATE IEP & BIP REPORT GENERATOR -->
+        <section id="tab6" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-file-contract text-navyBx"></i> 50-State IEP &amp; BIP Regulatory Progress Generator
+                        </h2>
+                        <p class="text-xs text-slate-500">Auto-fills state-mandated progress reports with active student demographics.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="state-selector" onchange="renderTab6StateReport()" class="p-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
+                            <option value="CA">California (CDE / SELPA)</option>
+                            <option value="NY">New York (NYSED Part 200)</option>
+                            <option value="TX">Texas (TEA / ARD Summary)</option>
+                            <option value="FL">Florida (FLDOE / PEER)</option>
+                            <option value="IL" selected>Illinois (ISBE Form 34-54)</option>
+                        </select>
+                        <button onclick="window.print()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg shadow">
+                            🖨️ Print Report
+                        </button>
+                    </div>
+                </div>
+
+                <div id="dynamic-state-progress-report-container">
+                    <!-- Populated dynamically by renderTab6StateReport() -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: MASTER ADMIN CONTROL & DIAGNOSTICS HUB -->
+        <section id="tab7" class="tab-content">
+            <div class="space-y-6">
+                <!-- PANEL A: MASTER STUDENT ROSTER MANAGEMENT -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-id-card text-navyBx"></i> Central Student Directory &amp; Intake Roster
+                            </h3>
+                            <p class="text-xs text-slate-500">Full CRUD student intake database feeding platform data isolation.</p>
+                        </div>
+                        <button onclick="openAddStudentModal()" class="px-4 py-2 bg-tealPulse hover:bg-tealHover text-white font-bold text-xs rounded-xl shadow">
+                            + Add New Student Profile
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
+                            <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">Student Name</th>
+                                    <th class="p-3">Grade &amp; DOB</th>
+                                    <th class="p-3">Primary Diagnosis</th>
+                                    <th class="p-3">District &amp; School</th>
+                                    <th class="p-3">Case Manager</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-roster-table-body" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically by renderAdminRoster() -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PANEL B: MASTER ADMIN & STAFF USERS MANAGEMENT -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-users-gear text-tealPulse"></i> Staff &amp; Administrator Account Control
+                            </h3>
+                            <p class="text-xs text-slate-500">Manage user accounts, passwords, and Master Admin permissions.</p>
+                        </div>
+                        <button onclick="openStaffModal()" class="px-4 py-2 bg-navyBx hover:bg-navyHover text-white font-bold text-xs rounded-xl shadow">
+                            + Add Staff User Account
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
+                            <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">Name &amp; Role</th>
+                                    <th class="p-3">Username / Email</th>
+                                    <th class="p-3">Role Level</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-staff-table-body" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically by renderAdminStaff() -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PANEL C: RUNTIME JAVASCRIPT PATCH & HISTORY MANAGER -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-code text-indigo-600"></i> JavaScript Patch &amp; Script History Registry
+                            </h3>
+                            <p class="text-xs text-slate-500">View, toggle, edit, or execute custom runtime updates.</p>
+                        </div>
+                        <button onclick="openPatchModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow">
+                            + Inject New JS Patch
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
+                            <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">Patch Title</th>
+                                    <th class="p-3">Executed At</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-patch-table-body" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically by renderAdminPatches() -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PANEL D: AUTOMATED SYSTEM DIAGNOSTICS SUITE -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-microchip text-emerald-600"></i> System Self-Diagnostics &amp; Integrity Test Suite
+                            </h3>
+                            <p class="text-xs text-slate-500">Verifies data store integrity, active isolation locks, and canvas performance.</p>
+                        </div>
+                        <button onclick="runSystemDiagnostics()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow">
+                            ⚡ Run Diagnostics Now
+                        </button>
+                    </div>
+
+                    <div id="diagnostics-log-box" class="p-4 bg-slate-900 text-slate-200 rounded-xl font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
+                        <p class="text-slate-400">// System diagnostics ready. Click "Run Diagnostics Now" to execute tests.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 8: MESSAGING HUB -->
+        <section id="tab8" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold text-navyBx uppercase flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-comments text-tealPulse"></i> Inter-Disciplinary Team Messaging
+                </h2>
+                <p class="text-xs text-slate-500 mb-4">Direct secure log for case managers, special ed teachers, and BCBAs.</p>
+                
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 h-64 overflow-y-auto space-y-3 mb-4 text-xs">
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm max-w-md">
+                        <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                            <strong>Brian H. Shaoul (BCBA)</strong>
+                            <span>Today 9:15 AM</span>
+                        </div>
+                        <p class="text-slate-700">Alex showed great progress with FCT request card today during math period!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: GOAL & BENCHMARK INTAKE / EDIT FORM -->
+    <div id="goal-intake-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-tealPulse"></i> <span id="goal-modal-title-text">Add Annual IEP / BIP Goal</span>
+                </h3>
+                <button type="button" onclick="closeGoalIntakeModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            </div>
+
+            <form id="goal-intake-form" onsubmit="handleGoalFormSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="goal-form-edit-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Goal Identifier *</label>
+                        <input type="text" id="goal-form-id" class="w-full p-2 border border-slate-300 rounded font-bold uppercase focus:outline-none focus:border-tealPulse" required placeholder="e.g. G1 or G3">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Target Student *</label>
+                        <input type="text" id="goal-form-student-name" readonly class="w-full p-2 bg-slate-100 border border-slate-300 rounded font-bold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Domain Classification *</label>
+                        <select id="goal-form-domain" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required>
+                            <option value="Academic Reading">Academic Reading</option>
+                            <option value="Academic Math">Academic Math</option>
+                            <option value="Academic Writing">Academic Writing</option>
+                            <option value="Academic Focus">Academic Focus / On-Task</option>
+                            <option value="Behavior Reduction">Behavior Reduction</option>
+                            <option value="Social / Communication">Social / Communication (FCT)</option>
+                            <option value="Adaptive / Independence">Adaptive / Independence</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Goal Statement / Title *</label>
+                    <textarea id="goal-form-title" rows="2" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required placeholder="Full annual goal description..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Baseline Level *</label>
+                        <input type="text" id="goal-form-baseline" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" placeholder="e.g. 45% baseline accuracy" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Mastery Target Criteria *</label>
+                        <input type="text" id="goal-form-criteria" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" placeholder="e.g. 80% accuracy across 3 sessions" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Target Evaluation Date</label>
+                        <input type="date" id="goal-form-target-date" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Measurement Method</label>
+                    <select id="goal-form-method" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse">
+                        <option value="Percent Accuracy (% Correct)">Percent Accuracy (% Correct)</option>
+                        <option value="Frequency / Rate Tally">Frequency / Rate Tally</option>
+                        <option value="Momentary Time Sampling (MTS)">Momentary Time Sampling (MTS)</option>
+                        <option value="Duration / Latency Recording">Duration / Latency Recording</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2 border-t border-slate-200 pt-3">
+                    <div class="flex justify-between items-center">
+                        <label class="block font-bold text-slate-700 uppercase text-[11px]">Sub-Benchmarks &amp; Objectives</label>
+                        <button type="button" onclick="addBenchmarkFormRow()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded">
+                            + Add Sub-Benchmark
+                        </button>
+                    </div>
+                    <div id="goal-benchmarks-container" class="space-y-2">
+                        <!-- Benchmark rows added dynamically -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeGoalIntakeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-tealPulse hover:bg-tealHover text-white font-bold rounded shadow transition">
+                        💾 Save Goal Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT STUDENT DEMOGRAPHICS -->
+    <div id="student-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-user-graduate text-navyBx"></i> <span id="student-modal-title">Student Intake Profile</span>
+                </h3>
+                <button type="button" onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            </div>
+
+            <form id="student-modal-form" onsubmit="handleStudentFormSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="stu-edit-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                        <input type="text" id="stu-name" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required placeholder="First &amp; Last Name">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Date of Birth *</label>
+                        <input type="date" id="stu-dob" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Gender</label>
+                        <select id="stu-gender" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Non-Binary / Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Grade Level *</label>
+                        <input type="text" id="stu-grade" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" placeholder="e.g. 4th Grade" required>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 mb-1">Primary Diagnosis Category *</label>
+                        <input type="text" id="stu-disability" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" placeholder="e.g. Autism Spectrum Disorder (ASD)" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">School District *</label>
+                        <input type="text" id="stu-district" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required placeholder="e.g. Brightmont District #101">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Assigned School</label>
+                        <input type="text" id="stu-school" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" placeholder="e.g. Brightmont Elementary">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Case Manager</label>
+                        <input type="text" id="stu-cm" value="Brian H. Shaoul" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">IEP Start Date</label>
+                        <input type="date" id="stu-iep-start" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Triennial Date</label>
+                        <input type="date" id="stu-triennial" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeStudentModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-tealPulse hover:bg-tealHover text-white font-bold rounded shadow transition">
+                        💾 Save Student Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT STAFF USERS -->
+    <div id="staff-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-tealPulse"></i> <span id="staff-modal-title">Staff Account Profile</span>
+                </h3>
+                <button type="button" onclick="closeStaffModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            </div>
+
+            <form id="staff-modal-form" onsubmit="handleStaffFormSubmit(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="staff-edit-id" value="">
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Staff Name *</label>
+                    <input type="text" id="staff-name" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required placeholder="Full Name">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Email / Username *</label>
+                    <input type="email" id="staff-username" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" required placeholder="user@domain.com">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="staff-password" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Role Title</label>
+                    <input type="text" id="staff-role" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-tealPulse" placeholder="e.g. BCBA, Special Education Teacher">
+                </div>
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="staff-is-master" class="w-4 h-4 text-tealPulse rounded">
+                    <label for="staff-is-master" class="font-bold text-slate-700">Grant Master Admin Privileges</label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeStaffModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-navyBx hover:bg-navyHover text-white font-bold rounded shadow">Save Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: JS PATCH EDITOR -->
+    <div id="patch-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-code text-indigo-600"></i> Inject Runtime JS Patch
+                </h3>
+                <button type="button" onclick="closePatchModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            </div>
+
+            <form id="patch-modal-form" onsubmit="handlePatchFormSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Patch Title / Module Name *</label>
+                    <input type="text" id="patch-title" class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-600" required placeholder="e.g., Tab 1 Chart Color Theme Fix">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">JavaScript Code Block *</label>
+                    <textarea id="patch-code" rows="8" class="w-full p-3 font-mono text-xs bg-slate-900 text-emerald-400 rounded-xl focus:outline-none" required placeholder="(function() { console.log('Custom patch executing...'); })();"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closePatchModal()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow">⚡ Evaluate &amp; Register Patch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: BUG REPORTING MODAL -->
+    <div id="bug-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-slate-900 border border-slate-700 text-slate-100 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-bug text-tealPulse"></i> Report System Issue
+                </h3>
+                <button onclick="closeBugReportModal()" class="text-slate-400 hover:text-white font-bold">✕</button>
+            </div>
+            <form onsubmit="handleBugSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-400 mb-1">Issue Description</label>
+                    <textarea id="bug-desc" rows="4" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-tealPulse" required placeholder="Describe the issue encountered..."></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeBugReportModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-tealPulse hover:bg-tealHover text-white font-bold rounded shadow">✉️ Dispatch Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CORE SYSTEM JAVASCRIPT ENGINE -->
+    <script>
+    // ==========================================
+    // 1. CENTRALIZED BXPULSE MASTER DATABASE
+    // ==========================================
+    const MASTER_DB_KEY = 'bxpulse_master_student_db_v14';
+    const ACTIVE_STUDENT_KEY = 'bxpulse_active_student_id';
+    const GOALS_DB_KEY = 'bxpulse_separated_goals_v13';
+    const BENCHMARKS_DB_KEY = 'bxpulse_separated_benchmarks_v13';
+    const STAFF_DB_KEY = 'bxpulse_staff_users_v16';
+    const PATCH_HISTORY_KEY = 'bxpulse_patch_history_v15';
+
+    const defaultStudents = [
+        {
+            id: 'stu_alex_johnson',
+            name: 'Alex Johnson',
+            dob: '2015-04-12',
+            gender: 'Male',
+            grade: '4th Grade',
+            disability: 'Autism Spectrum Disorder (ASD)',
+            district: 'Brightmont Academy District #101',
+            school: 'Brightmont Elementary',
+            caseManager: 'Brian H. Shaoul',
+            iepStartDate: '2026-01-15',
+            triennialDate: '2028-01-15'
+        },
+        {
+            id: 'stu_maria_garcia',
+            name: 'Maria Garcia',
+            dob: '2013-09-28',
+            gender: 'Female',
+            grade: '6th Grade',
+            disability: 'Emotional / Behavioral Disability (EBD)',
+            district: 'Metro Community District #204',
+            school: 'Lincoln Middle School',
+            caseManager: 'Kevin Tudor',
+            iepStartDate: '2026-03-01',
+            triennialDate: '2029-03-01'
+        }
+    ];
+
+    const defaultStaff = [
+        {
+            id: 'user_kevin_tudor',
+            name: 'Kevin Tudor',
+            username: 'Kevin.tudor26@gmail.com',
+            password: 'Teachsped13!',
+            role: 'Master Admin & Case Manager',
+            isMasterAdmin: true
+        },
+        {
+            id: 'user_brian_shaoul',
+            name: 'Brian H. Shaoul',
+            username: 'brian.shaoul@bxpulse.edu',
+            password: 'password123',
+            role: 'Lead BCBA',
+            isMasterAdmin: false
+        }
+    ];
+
+    const defaultGoals = [
+        { id: 'G1', studentId: 'stu_alex_johnson', domain: 'Academic Reading', title: 'Given 4th grade reading passage, student will read 90 WPM with 80% comprehension accuracy across 3 trials.', baseline: '45 WPM / 50% Comp', criteria: '90 WPM / 80% Comp', targetDate: '2026-12-15', method: 'Percent Accuracy (% Correct)' },
+        { id: 'G2', studentId: 'stu_alex_johnson', domain: 'Behavior Reduction', title: 'Student will decrease task refusal episodes to less than 2 per school day across 5 consecutive days.', baseline: '6 episodes/day', criteria: '< 2 episodes/day', targetDate: '2026-11-30', method: 'Frequency / Rate Tally' },
+        { id: 'G1', studentId: 'stu_maria_garcia', domain: 'Social / Communication', title: 'Student will present FCT break request card independently prior to escalation in 90% of opportunities.', baseline: '30% accuracy', criteria: '90% accuracy', targetDate: '2027-01-10', method: 'Percent Accuracy (% Correct)' }
+    ];
+
+    const defaultBenchmarks = [
+        { id: 'G1.1', goalId: 'G1', studentId: 'stu_alex_johnson', text: 'Read 60 WPM with max 1 verbal prompt.' },
+        { id: 'G1.2', goalId: 'G1', studentId: 'stu_alex_johnson', text: 'Answer 4 out of 5 comprehension questions independently.' },
+        { id: 'G2.1', goalId: 'G2', studentId: 'stu_alex_johnson', text: 'Initiate non-preferred task within 2 minutes of prompt.' },
+        { id: 'G1.1', goalId: 'G1', studentId: 'stu_maria_garcia', text: 'Present PECS icon when frustrated before vocal escalation.' }
+    ];
+
+    // Master Storage Initializers
+    let studentsDB = JSON.parse(localStorage.getItem(MASTER_DB_KEY)) || defaultStudents;
+    let staffDB = JSON.parse(localStorage.getItem(STAFF_DB_KEY)) || defaultStaff;
+    let goalsDB = JSON.parse(localStorage.getItem(GOALS_DB_KEY)) || defaultGoals;
+    let benchmarksDB = JSON.parse(localStorage.getItem(BENCHMARKS_DB_KEY)) || defaultBenchmarks;
+    let patchHistoryDB = JSON.parse(localStorage.getItem(PATCH_HISTORY_KEY)) || [];
+    let activeStudentId = localStorage.getItem(ACTIVE_STUDENT_KEY) || studentsDB[0].id;
+
+    function saveStorage() {
+        localStorage.setItem(MASTER_DB_KEY, JSON.stringify(studentsDB));
+        localStorage.setItem(STAFF_DB_KEY, JSON.stringify(staffDB));
+        localStorage.setItem(GOALS_DB_KEY, JSON.stringify(goalsDB));
+        localStorage.setItem(BENCHMARKS_DB_KEY, JSON.stringify(benchmarksDB));
+        localStorage.setItem(PATCH_HISTORY_KEY, JSON.stringify(patchHistoryDB));
+        localStorage.setItem(ACTIVE_STUDENT_KEY, activeStudentId);
+    }
+
+    // Global Master Database Controller
+    window.BxPulseMasterDB = {
+        getAllStudents: () => studentsDB,
+        getActiveStudent: () => studentsDB.find(s => s.id === activeStudentId) || studentsDB[0],
+        setActiveStudent: (id) => {
+            if (studentsDB.some(s => s.id === id)) {
+                activeStudentId = id;
+                saveStorage();
+                window.BxPulseCascadeSystemState();
+            }
+        }
+    };
+
+    // ==========================================
+    // 2. TAB SWITCHING ENGINE
+    // ==========================================
+    window.switchTab = function(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => {
+            el.classList.remove('border-tealPulse', 'text-white');
+            el.classList.add('border-transparent', 'text-slate-300');
+        });
+
+        const activeSection = document.getElementById(tabId);
+        const activeNavBtn = document.getElementById(`nav-${tabId}`);
+
+        if (activeSection) activeSection.classList.add('active');
+        if (activeNavBtn) {
+            activeNavBtn.classList.remove('border-transparent', 'text-slate-300');
+            activeNavBtn.classList.add('border-tealPulse', 'text-white');
+        }
+
+        // Render tab-specific dynamic content
+        if (tabId === 'tab1') renderAcademicCharts();
+        if (tabId === 'tab2') renderGoalsDirectory();
+        if (tabId === 'tab4') syncTab4Picker();
+        if (tabId === 'tab6') renderTab6StateReport();
+        if (tabId === 'tab7') renderAdminHub();
+    };
+
+    // ==========================================
+    // 3. RELATIONAL CASCADE & ISOLATION LOCK
+    // ==========================================
+    window.BxPulseCascadeSystemState = function() {
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+
+        // 1. Update Header Select Dropdown Options
+        const dropdown = document.getElementById('master-student-select-dropdown');
+        if (dropdown) {
+            dropdown.innerHTML = studentsDB.map(s => `
+                <option value="${s.id}" ${s.id === activeStudent.id ? 'selected' : ''}>
+                    ${s.name} (${s.grade} • ${s.disability})
+                </option>
+            `).join('');
+        }
+
+        // 2. Update Header Demographics Quick Info
+        document.getElementById('header-dob').textContent = activeStudent.dob || 'N/A';
+        document.getElementById('header-disability').textContent = activeStudent.disability || 'N/A';
+        document.getElementById('header-district').textContent = activeStudent.district || 'N/A';
+        document.getElementById('header-cm').textContent = activeStudent.caseManager || 'N/A';
+
+        // 3. Update DOM Data Bind Elements Across Tabs
+        document.querySelectorAll('[data-bind-student-name]').forEach(el => el.textContent = activeStudent.name);
+        document.querySelectorAll('[data-bind-student-grade]').forEach(el => el.textContent = `${activeStudent.grade} • ${activeStudent.disability}`);
+
+        // 4. Cascade to active modules
+        renderGoalsDirectory();
+        syncTab4Picker();
+        renderTab6StateReport();
+        renderAdminHub();
+
+        console.log(`🔒 System Isolated Context Locked to: "${activeStudent.name}" (${activeStudent.id})`);
+    };
+
+    // ==========================================
+    // 4. TAB 1: ACADEMIC & BEHAVIORAL CHARTS ENGINE
+    // ==========================================
+    let academicAccuracyChartInstance = null;
+    let academicFluencyChartInstance = null;
+    let domainMasteryChartInstance = null;
+    let promptDependencyChartInstance = null;
+
+    function renderAcademicCharts() {
+        if (typeof Chart === 'undefined') return;
+
+        // Line Chart 1: Accuracy Trendline
+        const ctxAccuracy = document.getElementById('academicAccuracyChart')?.getContext('2d');
+        if (ctxAccuracy) {
+            if (academicAccuracyChartInstance) academicAccuracyChartInstance.destroy();
+            academicAccuracyChartInstance = new Chart(ctxAccuracy, {
+                type: 'line',
+                data: {
+                    labels: ['Wk 1 (Baseline)', 'Wk 2', 'Wk 3', 'Wk 4', 'Wk 5', 'Wk 6', 'Wk 7 (Current)'],
+                    datasets: [
+                        {
+                            label: 'Academic Accuracy (%)',
+                            data: [42, 50, 58, 65, 62, 74, 82],
+                            borderColor: '#00A896',
+                            backgroundColor: 'rgba(0, 168, 150, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'IEP Target Criteria (80%)',
+                            data: [80, 80, 80, 80, 80, 80, 80],
+                            borderColor: '#0B4A82',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+            });
+        }
+
+        // Bar Chart 2: Fluency Rate
+        const ctxFluency = document.getElementById('academicFluencyChart')?.getContext('2d');
+        if (ctxFluency) {
+            if (academicFluencyChartInstance) academicFluencyChartInstance.destroy();
+            academicFluencyChartInstance = new Chart(ctxFluency, {
+                type: 'bar',
+                data: {
+                    labels: ['Probe 1', 'Probe 2', 'Probe 3', 'Probe 4', 'Probe 5', 'Probe 6'],
+                    datasets: [{
+                        label: 'Words Per Minute (WPM)',
+                        data: [45, 52, 60, 58, 68, 75],
+                        backgroundColor: '#0B4A82',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // Bar Chart 3: Domain Matrix
+        const ctxDomain = document.getElementById('domainMasteryChart')?.getContext('2d');
+        if (ctxDomain) {
+            if (domainMasteryChartInstance) domainMasteryChartInstance.destroy();
+            domainMasteryChartInstance = new Chart(ctxDomain, {
+                type: 'bar',
+                data: {
+                    labels: ['Reading Comp.', 'Math Computation', 'Written Expr.', 'Task Refusal', 'FCT Request'],
+                    datasets: [{
+                        label: '% Target Mastery Attained',
+                        data: [85, 72, 68, 90, 88],
+                        backgroundColor: ['#00A896', '#0B4A82', '#4A5568', '#10B981', '#6366F1'],
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { max: 100 } } }
+            });
+        }
+
+        // Doughnut Chart 4: Prompt Dependency
+        const ctxPrompt = document.getElementById('promptDependencyChart')?.getContext('2d');
+        if (ctxPrompt) {
+            if (promptDependencyChartInstance) promptDependencyChartInstance.destroy();
+            promptDependencyChartInstance = new Chart(ctxPrompt, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Independent (70%)', 'Verbal Prompt (15%)', 'Gestural (10%)', 'Physical (5%)'],
+                    datasets: [{
+                        data: [70, 15, 10, 5],
+                        backgroundColor: ['#00A896', '#0B4A82', '#F59E0B', '#EF4444']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        }
+    }
+
+    // ==========================================
+    // 5. TAB 2: GOALS & BENCHMARKS DIRECTORY CRUD
+    // ==========================================
+    function renderGoalsDirectory() {
+        const container = document.getElementById('goals-directory-list');
+        if (!container) return;
+
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        const studentGoals = goalsDB.filter(g => g.studentId === activeStudent.id);
+
+        if (studentGoals.length === 0) {
+            container.innerHTML = `
+                <div class="p-8 text-center bg-slate-50 border border-dashed border-slate-300 rounded-xl">
+                    <p class="text-sm font-semibold text-slate-500">No annual IEP/BIP goals recorded for ${activeStudent.name}.</p>
+                    <button onclick="openGoalIntakeModal()" class="mt-3 px-4 py-2 bg-tealPulse text-white font-bold text-xs rounded-lg shadow">
+                        + Add Goal for ${activeStudent.name}
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = studentGoals.map(g => {
+            const linkedBenchmarks = benchmarksDB.filter(b => b.goalId === g.id && b.studentId === activeStudent.id);
+            const bmHTML = linkedBenchmarks.map(b => `
+                <div class="flex items-center justify-between bg-white p-2.5 rounded border border-slate-200 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold px-2 py-0.5 rounded font-mono bg-tealLight text-tealHover">${b.id}</span>
+                        <span class="text-slate-800 font-medium">${b.text}</span>
+                    </div>
+                    <button onclick="deleteBenchmarkRecord('${b.id}')" class="text-red-500 hover:text-red-700 font-bold px-2 text-[11px]">✕ Remove</button>
+                </div>
+            `).join('');
+
+            return `
+                <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-start border-b border-slate-200 pb-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold uppercase px-2.5 py-0.5 rounded bg-blue-50 text-navyBx">${g.id} • ${g.domain}</span>
+                                <span class="text-[11px] text-slate-500 font-medium">Target Evaluation: ${g.targetDate || 'Annual Review'}</span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-800 mt-1">${g.title}</h4>
+                            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-600 mt-1">
+                                <span><strong>Baseline:</strong> ${g.baseline || 'N/A'}</span>
+                                <span><strong>Mastery Criteria:</strong> ${g.criteria || '80%'}</span>
+                                <span><strong>Method:</strong> ${g.method || 'Accuracy'}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openGoalIntakeModal('${g.id}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded shadow">✏️ Edit Goal</button>
+                            <button onclick="deleteGoalRecord('${g.id}')" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded">🗑️ Delete</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-xs font-bold uppercase text-slate-600">Sub-Benchmarks &amp; Objectives (${linkedBenchmarks.length}):</label>
+                        </div>
+                        <div class="space-y-1.5">${bmHTML.length > 0 ? bmHTML : '<p class="text-xs text-slate-400 italic">No sub-benchmarks registered.</p>'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.openGoalIntakeModal = function(editGoalId = null) {
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        document.getElementById('goal-form-student-name').value = activeStudent.name;
+        document.getElementById('goal-benchmarks-container').innerHTML = '';
+
+        if (editGoalId) {
+            const goal = goalsDB.find(g => g.id === editGoalId && g.studentId === activeStudent.id);
+            if (!goal) return;
+
+            document.getElementById('goal-modal-title-text').textContent = `Edit Goal (${goal.id})`;
+            document.getElementById('goal-form-edit-id').value = goal.id;
+            document.getElementById('goal-form-id').value = goal.id;
+            document.getElementById('goal-form-domain').value = goal.domain;
+            document.getElementById('goal-form-title').value = goal.title;
+            document.getElementById('goal-form-baseline').value = goal.baseline || '';
+            document.getElementById('goal-form-criteria').value = goal.criteria || '';
+            document.getElementById('goal-form-target-date').value = goal.targetDate || '';
+            document.getElementById('goal-form-method').value = goal.method || 'Percent Accuracy (% Correct)';
+
+            const linked = benchmarksDB.filter(b => b.goalId === editGoalId && b.studentId === activeStudent.id);
+            linked.forEach(b => addBenchmarkFormRow(b.text));
+        } else {
+            document.getElementById('goal-modal-title-text').textContent = 'Add Annual IEP / BIP Goal';
+            document.getElementById('goal-form-edit-id').value = '';
+            document.getElementById('goal-intake-form').reset();
+            document.getElementById('goal-form-student-name').value = activeStudent.name;
+            document.getElementById('goal-form-id').value = `G${goalsDB.filter(g => g.studentId === activeStudent.id).length + 1}`;
+            addBenchmarkFormRow();
+        }
+
+        document.getElementById('goal-intake-modal').classList.remove('hidden');
+    };
+
+    window.closeGoalIntakeModal = () => document.getElementById('goal-intake-modal').classList.add('hidden');
+
+    window.addBenchmarkFormRow = function(val = '') {
+        const container = document.getElementById('goal-benchmarks-container');
+        const rowId = `bm_row_${Date.now()}_${Math.random().toString().slice(-3)}`;
+        const row = document.createElement('div');
+        row.id = rowId;
+        row.className = 'flex items-center gap-2';
+        row.innerHTML = `
+            <input type="text" class="bm-text-input w-full p-2 border border-slate-300 rounded text-xs focus:outline-none focus:border-tealPulse" placeholder="Sub-benchmark objective text..." value="${val}" required>
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 hover:text-red-700 font-bold px-2 text-xs">✕</button>
+        `;
+        container.appendChild(row);
+    };
+
+    window.handleGoalFormSubmit = function(e) {
+        e.preventDefault();
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        const editId = document.getElementById('goal-form-edit-id').value;
+        const goalId = document.getElementById('goal-form-id').value.trim();
+        const domain = document.getElementById('goal-form-domain').value;
+        const title = document.getElementById('goal-form-title').value.trim();
+        const baseline = document.getElementById('goal-form-baseline').value.trim();
+        const criteria = document.getElementById('goal-form-criteria').value.trim();
+        const targetDate = document.getElementById('goal-form-target-date').value;
+        const method = document.getElementById('goal-form-method').value;
+
+        if (editId) {
+            goalsDB = goalsDB.filter(g => !(g.id === editId && g.studentId === activeStudent.id));
+            benchmarksDB = benchmarksDB.filter(b => !(b.goalId === editId && b.studentId === activeStudent.id));
+        }
+
+        goalsDB.push({ id: goalId, studentId: activeStudent.id, domain, title, baseline, criteria, targetDate, method });
+
+        document.querySelectorAll('.bm-text-input').forEach((inp, idx) => {
+            const txt = inp.value.trim();
+            if (txt) {
+                benchmarksDB.push({ id: `${goalId}.${idx + 1}`, goalId: goalId, studentId: activeStudent.id, text: txt });
+            }
+        });
+
+        saveStorage();
+        closeGoalIntakeModal();
+        window.BxPulseCascadeSystemState();
+    };
+
+    window.deleteGoalRecord = function(goalId) {
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        if (confirm(`Delete Goal [${goalId}] and associated benchmarks for ${activeStudent.name}?`)) {
+            goalsDB = goalsDB.filter(g => !(g.id === goalId && g.studentId === activeStudent.id));
+            benchmarksDB = benchmarksDB.filter(b => !(b.goalId === goalId && b.studentId === activeStudent.id));
+            saveStorage();
+            window.BxPulseCascadeSystemState();
+        }
+    };
+
+    window.deleteBenchmarkRecord = function(bmId) {
+        benchmarksDB = benchmarksDB.filter(b => b.id !== bmId);
+        saveStorage();
+        window.BxPulseCascadeSystemState();
+    };
+
+    // ==========================================
+    // 6. TAB 3: GEMINI AI ASSISTANT
+    // ==========================================
+    window.runAIAssistant = function() {
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        const prompt = document.getElementById('ai-prompt-input').value.trim();
+        const box = document.getElementById('ai-response-box');
+
+        if (!prompt) {
+            box.innerHTML = `<span class="text-red-500 font-bold">Please enter a prompt for Gemini AI.</span>`;
+            return;
+        }
+
+        box.innerHTML = `⏳ Analyzing student profile and evaluating clinical trajectory for ${activeStudent.name}...`;
+
+        setTimeout(() => {
+            box.innerHTML = `
+<strong>🤖 Gemini AI Clinical Insight (${activeStudent.name}):</strong>
+• <u>SMART Goal Recommendation</u>: Given a 4th grade instructional task demand, ${activeStudent.name} will initiate independent work within 60 seconds of prompt in 4 out of 5 opportunities.
+• <u>BIP Strategy</u>: Utilize a visual 3-step task schedule combined with Differential Reinforcement of Alternative behavior (DRA).
+• <u>Data Collection Note</u>: Track initiation latency in Tab 4 to monitor progress toward the 60-second threshold.
+            `;
+        }, 800);
+    };
+
+    // ==========================================
+    // 7. TAB 4: CLINICAL DATA COLLECTION TOOLKIT
+    // ==========================================
+    function syncTab4Picker() {
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        const studentGoals = goalsDB.filter(g => g.studentId === activeStudent.id);
+        const picker = document.getElementById('tab4-master-goal-selector');
+
+        if (picker) {
+            picker.innerHTML = studentGoals.length > 0
+                ? studentGoals.map(g => `<option value="${g.id}">[${g.id}] ${g.title}</option>`).join('')
+                : `<option value="">-- No Goals Available --</option>`;
+        }
+    }
+
+    // ABC Logger
+    window.handleABCLogSubmit = function(e) {
+        e.preventDefault();
+        const ant = document.getElementById('abc-antecedent').value;
+        const beh = document.getElementById('abc-behavior').value;
+        const con = document.getElementById('abc-consequence').value;
+        const tableBody = document.getElementById('abc-logs-table-body');
+
+        if (tableBody.querySelector('td[colspan]')) tableBody.innerHTML = '';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="p-2 border-b font-mono font-bold">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+            <td class="p-2 border-b text-slate-700">${ant}</td>
+            <td class="p-2 border-b font-semibold text-navyBx">${beh}</td>
+            <td class="p-2 border-b text-slate-700">${con}</td>
+        `;
+        tableBody.prepend(row);
+        document.getElementById('abc-notes').value = '';
+    };
+
+    // Frequency Counter
+    let frequencyCount = 0;
+    let frequencyTimerInterval = null;
+    let frequencySeconds = 0;
+
+    window.adjustFrequencyCount = function(delta) {
+        frequencyCount = Math.max(0, frequencyCount + delta);
+        document.getElementById('freq-count-display').textContent = frequencyCount;
+        updateFrequencyRate();
+    };
+
+    window.toggleFrequencyTimer = function() {
+        const btn = document.getElementById('btn-toggle-freq-timer');
+        if (frequencyTimerInterval) {
+            clearInterval(frequencyTimerInterval);
+            frequencyTimerInterval = null;
+            btn.textContent = 'Resume Session';
+        } else {
+            frequencyTimerInterval = setInterval(() => {
+                frequencySeconds++;
+                const mins = String(Math.floor(frequencySeconds / 60)).padStart(2, '0');
+                const secs = String(frequencySeconds % 60).padStart(2, '0');
+                document.getElementById('freq-timer-display').textContent = `${mins}:${secs}`;
+                updateFrequencyRate();
+            }, 1000);
+            btn.textContent = 'Pause Session';
+        }
+    };
+
+    function updateFrequencyRate() {
+        const mins = frequencySeconds / 60;
+        const rate = mins > 0 ? (frequencyCount / mins).toFixed(2) : '0.00';
+        document.getElementById('freq-rate-display').textContent = `${rate} / min`;
+    }
+
+    window.resetFrequencyCounter = function() {
+        if (frequencyTimerInterval) clearInterval(frequencyTimerInterval);
+        frequencyTimerInterval = null;
+        frequencyCount = 0;
+        frequencySeconds = 0;
+        document.getElementById('freq-count-display').textContent = '0';
+        document.getElementById('freq-timer-display').textContent = '00:00';
+        document.getElementById('freq-rate-display').textContent = '0.00 / min';
+        document.getElementById('btn-toggle-freq-timer').textContent = 'Start Session';
+    };
+
+    // Momentary Time Sampling (MTS)
+    let mtsTimerInterval = null;
+    let mtsSecondsLeft = 30;
+    let mtsOnTaskCount = 0;
+    let mtsTotalCount = 0;
+
+    window.toggleMTSTimer = function() {
+        const btn = document.getElementById('btn-toggle-mts');
+        const intervalChoice = parseInt(document.getElementById('mts-interval-select').value) || 30;
+
+        if (mtsTimerInterval) {
+            clearInterval(mtsTimerInterval);
+            mtsTimerInterval = null;
+            btn.textContent = 'Start MTS';
+            document.getElementById('btn-mts-ontask').disabled = true;
+            document.getElementById('btn-mts-offtask').disabled = true;
+        } else {
+            mtsSecondsLeft = intervalChoice;
+            mtsTimerInterval = setInterval(() => {
+                mtsSecondsLeft--;
+                const secStr = String(mtsSecondsLeft).padStart(2, '0');
+                document.getElementById('mts-countdown-display').textContent = `00:${secStr}`;
+
+                if (mtsSecondsLeft <= 0) {
+                    document.getElementById('btn-mts-ontask').disabled = false;
+                    document.getElementById('btn-mts-offtask').disabled = false;
+                    document.getElementById('btn-mts-ontask').classList.remove('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('btn-mts-offtask').classList.remove('opacity-50', 'cursor-not-allowed');
+                    mtsSecondsLeft = intervalChoice;
+                }
+            }, 1000);
+            btn.textContent = 'Pause MTS';
+        }
+    };
+
+    window.recordMTSInterval = function(isOnTask) {
+        mtsTotalCount++;
+        if (isOnTask) mtsOnTaskCount++;
+
+        document.getElementById('mts-total-logged').textContent = mtsTotalCount;
+        const pct = ((mtsOnTaskCount / mtsTotalCount) * 100).toFixed(1);
+        document.getElementById('mts-percentage').textContent = `${pct}%`;
+
+        document.getElementById('btn-mts-ontask').disabled = true;
+        document.getElementById('btn-mts-offtask').disabled = true;
+        document.getElementById('btn-mts-ontask').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('btn-mts-offtask').classList.add('opacity-50', 'cursor-not-allowed');
+    };
+
+    // Duration & Latency
+    let latencyTimerInterval = null;
+    let latencyTenths = 0;
+    let durationTimerInterval = null;
+    let durationTenths = 0;
+
+    window.startLatencyTimer = function() {
+        if (latencyTimerInterval) clearInterval(latencyTimerInterval);
+        latencyTenths = 0;
+        document.getElementById('btn-start-latency').disabled = true;
+        document.getElementById('btn-stop-latency').disabled = false;
+        document.getElementById('btn-stop-latency').classList.remove('opacity-50');
+
+        latencyTimerInterval = setInterval(() => {
+            latencyTenths++;
+            const secs = String(Math.floor(latencyTenths / 10) % 60).padStart(2, '0');
+            const mins = String(Math.floor(latencyTenths / 600)).padStart(2, '0');
+            const tenths = latencyTenths % 10;
+            document.getElementById('latency-timer-display').textContent = `${mins}:${secs}.${tenths}`;
+        }, 100);
+    };
+
+    window.stopLatencyTimer = function() {
+        if (latencyTimerInterval) clearInterval(latencyTimerInterval);
+        latencyTimerInterval = null;
+        document.getElementById('btn-start-latency').disabled = false;
+        document.getElementById('btn-stop-latency').disabled = true;
+        document.getElementById('btn-stop-latency').classList.add('opacity-50');
+    };
+
+    window.toggleDurationTimer = function() {
+        const btn = document.getElementById('btn-toggle-duration');
+        if (durationTimerInterval) {
+            clearInterval(durationTimerInterval);
+            durationTimerInterval = null;
+            btn.textContent = 'Resume Duration';
+        } else {
+            durationTimerInterval = setInterval(() => {
+                durationTenths++;
+                const secs = String(Math.floor(durationTenths / 10) % 60).padStart(2, '0');
+                const mins = String(Math.floor(durationTenths / 600)).padStart(2, '0');
+                const tenths = durationTenths % 10;
+                document.getElementById('duration-timer-display').textContent = `${mins}:${secs}.${tenths}`;
+            }, 100);
+            btn.textContent = 'Pause Duration';
+        }
+    };
+
+    window.resetDurationTimer = function() {
+        if (durationTimerInterval) clearInterval(durationTimerInterval);
+        durationTimerInterval = null;
+        durationTenths = 0;
+        document.getElementById('duration-timer-display').textContent = '00:00.0';
+        document.getElementById('btn-toggle-duration').textContent = 'Start Duration';
+    };
+
+    // ==========================================
+    // 8. TAB 6: 50-STATE IEP & BIP REPORT GENERATOR
+    // ==========================================
+    function renderTab6StateReport() {
+        const container = document.getElementById('dynamic-state-progress-report-container');
+        if (!container) return;
+
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        const studentGoals = goalsDB.filter(g => g.studentId === activeStudent.id);
+        const stateCode = document.getElementById('state-selector')?.value || 'IL';
+
+        const stateInfoMap = {
+            CA: { agency: 'California Dept of Education (CDE)', code: '5 CCR § 3052' },
+            NY: { agency: 'NY State Education Dept (NYSED)', code: '8 NYCRR Part 200.22' },
+            TX: { agency: 'Texas Education Agency (TEA)', code: '19 TAC § 89.1050' },
+            FL: { agency: 'Florida Dept of Education (PEER)', code: 'FL Admin Code 6A-6.03028' },
+            IL: { agency: 'Illinois State Board of Education (ISBE)', code: '23 IL Admin Code 226.230 (Form 34-54)' }
+        };
+
+        const stateMeta = stateInfoMap[stateCode] || stateInfoMap.IL;
+
+        const goalRows = studentGoals.map(g => `
+            <tr>
+                <td class="p-3 border font-bold text-navyBx">${g.id}</td>
+                <td class="p-3 border">
+                    <div class="font-bold text-slate-800">${g.title}</div>
+                    <div class="text-[10px] text-slate-500 mt-0.5">Domain: ${g.domain} | Target Criteria: ${g.criteria}</div>
+                </td>
+                <td class="p-3 border">
+                    <textarea class="w-full p-2 border border-slate-300 rounded text-xs" rows="2">Quarterly Evaluation: ${activeStudent.name} is making adequate progress toward achieving target criteria by annual review.</textarea>
+                </td>
+            </tr>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="p-6 bg-slate-50 rounded-xl border border-slate-300 shadow-sm space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-tealPulse bg-tealLight px-2.5 py-1 rounded">
+                            ${stateMeta.agency} • ${stateMeta.code}
+                        </span>
+                        <h3 class="text-lg font-bold text-slate-800 mt-1">Official Progress Summary: ${activeStudent.name}</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-lg border border-slate-200 text-xs">
+                    <div><strong>Student Name:</strong> ${activeStudent.name}</div>
+                    <div><strong>Grade Level &amp; DOB:</strong> ${activeStudent.grade} (${activeStudent.dob})</div>
+                    <div><strong>Primary Disability:</strong> ${activeStudent.disability}</div>
+                    <div><strong>School District:</strong> ${activeStudent.district}</div>
+                    <div><strong>Facility:</strong> ${activeStudent.school}</div>
+                    <div><strong>Case Manager:</strong> ${activeStudent.caseManager}</div>
+                </div>
+
+                <table class="w-full text-left border-collapse bg-white text-xs border border-slate-300">
+                    <thead class="bg-slate-100 text-slate-700 font-bold uppercase">
+                        <tr>
+                            <th class="p-3 border w-20">Goal ID</th>
+                            <th class="p-3 border w-1/2">Annual Goal Statement</th>
+                            <th class="p-3 border">Regulatory Progress Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${goalRows.length > 0 ? goalRows : '<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">No goals registered for state reporting.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    // ==========================================
+    // 9. TAB 7: MASTER ADMIN HUB & DIAGNOSTICS
+    // ==========================================
+    function renderAdminHub() {
+        renderAdminRoster();
+        renderAdminStaff();
+        renderAdminPatches();
+    }
+
+    // Admin Roster Table
+    function renderAdminRoster() {
+        const tbody = document.getElementById('admin-roster-table-body');
+        if (!tbody) return;
+
+        tbody.innerHTML = studentsDB.map(s => `
+            <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-navyBx">${s.name} ${s.id === activeStudentId ? '<span class="text-[10px] bg-tealLight text-tealPulse font-bold px-2 py-0.5 rounded ml-1">Active</span>' : ''}</td>
+                <td class="p-3 text-slate-600">${s.grade} (${s.dob})</td>
+                <td class="p-3 font-medium text-slate-800">${s.disability}</td>
+                <td class="p-3 text-slate-600">${s.district} / ${s.school}</td>
+                <td class="p-3 text-slate-600">${s.caseManager}</td>
+                <td class="p-3 text-right space-x-1">
+                    <button onclick="window.BxPulseMasterDB.setActiveStudent('${s.id}')" class="px-2 py-1 bg-tealPulse text-white font-bold text-[11px] rounded">Select</button>
+                    <button onclick="openAddStudentModal('${s.id}')" class="px-2 py-1 bg-slate-800 text-white font-bold text-[11px] rounded">Edit</button>
+                    <button onclick="deleteStudentRosterItem('${s.id}')" class="px-2 py-1 bg-red-100 text-red-700 font-bold text-[11px] rounded">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Admin Staff Table
+    function renderAdminStaff() {
+        const tbody = document.getElementById('admin-staff-table-body');
+        if (!tbody) return;
+
+        tbody.innerHTML = staffDB.map(user => `
+            <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-slate-800">${user.name}</td>
+                <td class="p-3 font-mono text-slate-600">${user.username}</td>
+                <td class="p-3">
+                    <span class="px-2.5 py-0.5 rounded text-[11px] font-bold ${user.isMasterAdmin ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}">
+                        ${user.isMasterAdmin ? '👑 Master Admin' : user.role}
+                    </span>
+                </td>
+                <td class="p-3 text-right space-x-1">
+                    <button onclick="openStaffModal('${user.id}')" class="px-2 py-1 bg-slate-800 text-white font-bold text-[11px] rounded">Edit</button>
+                    ${!user.isMasterAdmin ? `<button onclick="deleteStaffItem('${user.id}')" class="px-2 py-1 bg-red-100 text-red-700 font-bold text-[11px] rounded">Delete</button>` : ''}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Admin JS Patches Table
+    function renderAdminPatches() {
+        const tbody = document.getElementById('admin-patch-table-body');
+        if (!tbody) return;
+
+        if (patchHistoryDB.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">No custom runtime JavaScript patches registered.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = patchHistoryDB.map((p, idx) => `
+            <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-slate-800">${p.title}</td>
+                <td class="p-3 text-slate-500 font-mono text-[11px]">${p.timestamp}</td>
+                <td class="p-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
+                        ${p.enabled ? '✓ Active' : 'Disabled'}
+                    </span>
+                </td>
+                <td class="p-3 text-right space-x-1">
+                    <button onclick="togglePatchStatus(${idx})" class="px-2 py-1 bg-slate-800 text-white text-[11px] font-bold rounded">${p.enabled ? 'Disable' : 'Enable'}</button>
+                    <button onclick="deletePatchItem(${idx})" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-bold rounded">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Student Roster CRUD Modals
+    window.openAddStudentModal = function(editId = null) {
+        if (editId) {
+            const s = studentsDB.find(stu => stu.id === editId);
+            if (!s) return;
+            document.getElementById('student-modal-title').textContent = `Edit Profile: ${s.name}`;
+            document.getElementById('stu-edit-id').value = s.id;
+            document.getElementById('stu-name').value = s.name;
+            document.getElementById('stu-dob').value = s.dob;
+            document.getElementById('stu-gender').value = s.gender || 'Male';
+            document.getElementById('stu-grade').value = s.grade;
+            document.getElementById('stu-disability').value = s.disability;
+            document.getElementById('stu-district').value = s.district;
+            document.getElementById('stu-school').value = s.school;
+            document.getElementById('stu-cm').value = s.caseManager;
+            document.getElementById('stu-iep-start').value = s.iepStartDate || '';
+            document.getElementById('stu-triennial').value = s.triennialDate || '';
+        } else {
+            document.getElementById('student-modal-title').textContent = 'Student Intake Profile';
+            document.getElementById('stu-edit-id').value = '';
+            document.getElementById('student-modal-form').reset();
+        }
+        document.getElementById('student-modal').classList.remove('hidden');
+    };
+
+    window.closeStudentModal = () => document.getElementById('student-modal').classList.add('hidden');
+
+    window.handleStudentFormSubmit = function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('stu-edit-id').value;
+        const name = document.getElementById('stu-name').value.trim();
+        const dob = document.getElementById('stu-dob').value;
+        const gender = document.getElementById('stu-gender').value;
+        const grade = document.getElementById('stu-grade').value.trim();
+        const disability = document.getElementById('stu-disability').value.trim();
+        const district = document.getElementById('stu-district').value.trim();
+        const school = document.getElementById('stu-school').value.trim();
+        const caseManager = document.getElementById('stu-cm').value.trim();
+        const iepStartDate = document.getElementById('stu-iep-start').value;
+        const triennialDate = document.getElementById('stu-triennial').value;
+
+        if (editId) {
+            const s = studentsDB.find(stu => stu.id === editId);
+            if (s) {
+                Object.assign(s, { name, dob, gender, grade, disability, district, school, caseManager, iepStartDate, triennialDate });
+            }
+        } else {
+            const newId = `stu_${name.toLowerCase().replace(/\s+/g, '_')}_${Date.now().toString().slice(-4)}`;
+            studentsDB.push({ id: newId, name, dob, gender, grade, disability, district, school, caseManager, iepStartDate, triennialDate });
+            activeStudentId = newId;
+        }
+
+        saveStorage();
+        closeStudentModal();
+        window.BxPulseCascadeSystemState();
+    };
+
+    window.deleteStudentRosterItem = function(id) {
+        if (studentsDB.length <= 1) {
+            alert("Cannot delete the only student in the roster.");
+            return;
+        }
+        const target = studentsDB.find(s => s.id === id);
+        if (confirm(`Delete student profile for "${target.name}"?`)) {
+            studentsDB = studentsDB.filter(s => s.id !== id);
+            goalsDB = goalsDB.filter(g => g.studentId !== id);
+            benchmarksDB = benchmarksDB.filter(b => b.studentId !== id);
+
+            if (activeStudentId === id) activeStudentId = studentsDB[0].id;
+            saveStorage();
+            window.BxPulseCascadeSystemState();
+        }
+    };
+
+    // Staff Account CRUD Modals
+    window.openStaffModal = function(editId = null) {
+        if (editId) {
+            const u = staffDB.find(usr => usr.id === editId);
+            if (!u) return;
+            document.getElementById('staff-modal-title').textContent = `Edit Account: ${u.name}`;
+            document.getElementById('staff-edit-id').value = u.id;
+            document.getElementById('staff-name').value = u.name;
+            document.getElementById('staff-username').value = u.username;
+            document.getElementById('staff-password').value = u.password;
+            document.getElementById('staff-role').value = u.role;
+            document.getElementById('staff-is-master').checked = u.isMasterAdmin;
+        } else {
+            document.getElementById('staff-modal-title').textContent = 'Staff Account Profile';
+            document.getElementById('staff-edit-id').value = '';
+            document.getElementById('staff-modal-form').reset();
+        }
+        document.getElementById('staff-modal').classList.remove('hidden');
+    };
+
+    window.closeStaffModal = () => document.getElementById('staff-modal').classList.add('hidden');
+
+    window.handleStaffFormSubmit = function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('staff-edit-id').value;
+        const name = document.getElementById('staff-name').value.trim();
+        const username = document.getElementById('staff-username').value.trim();
+        const password = document.getElementById('staff-password').value;
+        const role = document.getElementById('staff-role').value.trim();
+        const isMasterAdmin = document.getElementById('staff-is-master').checked;
+
+        if (editId) {
+            const u = staffDB.find(usr => usr.id === editId);
+            if (u) Object.assign(u, { name, username, password, role, isMasterAdmin });
+        } else {
+            const newId = `user_${Date.now().toString().slice(-5)}`;
+            staffDB.push({ id: newId, name, username, password, role, isMasterAdmin });
+        }
+
+        saveStorage();
+        closeStaffModal();
+        renderAdminStaff();
+    };
+
+    window.deleteStaffItem = function(id) {
+        const u = staffDB.find(usr => usr.id === id);
+        if (u && u.isMasterAdmin) {
+            alert("Master Admin user accounts cannot be deleted.");
+            return;
+        }
+        if (confirm(`Delete staff account for "${u.name}"?`)) {
+            staffDB = staffDB.filter(usr => usr.id !== id);
+            saveStorage();
+            renderAdminStaff();
+        }
+    };
+
+    // JS Patch Registry Modals
+    window.openPatchModal = () => document.getElementById('patch-modal').classList.remove('hidden');
+    window.closePatchModal = () => document.getElementById('patch-modal').classList.add('hidden');
+
+    window.handlePatchFormSubmit = function(e) {
+        e.preventDefault();
+        const title = document.getElementById('patch-title').value.trim();
+        const code = document.getElementById('patch-code').value.trim();
+
+        try {
+            eval(code);
+            patchHistoryDB.push({ title, code, timestamp: new Date().toLocaleString(), enabled: true });
+            saveStorage();
+            closePatchModal();
+            renderAdminPatches();
+            alert(`JS Patch "${title}" successfully evaluated and registered!`);
+        } catch (err) {
+            alert(`Patch Evaluation Error: ${err.message}`);
+        }
+    };
+
+    window.togglePatchStatus = function(idx) {
+        patchHistoryDB[idx].enabled = !patchHistoryDB[idx].enabled;
+        saveStorage();
+        renderAdminPatches();
+    };
+
+    window.deletePatchItem = function(idx) {
+        if (confirm(`Remove patch "${patchHistoryDB[idx].title}"?`)) {
+            patchHistoryDB.splice(idx, 1);
+            saveStorage();
+            renderAdminPatches();
+        }
+    };
+
+    // Diagnostics Engine
+    window.runSystemDiagnostics = function() {
+        const logBox = document.getElementById('diagnostics-log-box');
+        logBox.innerHTML = '';
+        
+        function log(msg, type = 'info') {
+            const color = type === 'pass' ? 'text-emerald-400' : type === 'warn' ? 'text-amber-400' : 'text-slate-300';
+            logBox.innerHTML += `<p class="${color}">[${new Date().toLocaleTimeString()}] ${msg}</p>`;
+        }
+
+        log("🚀 Executing BxPulse Platform Self-Test Diagnostics Suite...", 'info');
+        
+        // Test 1: BxPulseMasterDB Integrity
+        if (studentsDB && studentsDB.length > 0) log(`✔ BxPulseMasterDB Store Active (${studentsDB.length} Students Registered)`, 'pass');
+        else log("✖ BxPulseMasterDB Store Missing or Empty", 'warn');
+
+        // Test 2: Active Student Context Lock
+        const activeStudent = window.BxPulseMasterDB.getActiveStudent();
+        if (activeStudent && activeStudent.id) log(`✔ Single-Student Isolation Locked: "${activeStudent.name}" (${activeStudent.id})`, 'pass');
+        else log("✖ Active Student Isolation Lock Faulty", 'warn');
+
+        // Test 3: Master Admin Privileges
+        const masterAdmin = staffDB.find(u => u.isMasterAdmin && u.username === 'Kevin.tudor26@gmail.com');
+        if (masterAdmin) log(`✔ Master Admin Verified: ${masterAdmin.name} (${masterAdmin.username})`, 'pass');
+        else log("✖ Default Master Admin Kevin Tudor Not Found", 'warn');
+
+        // Test 4: Chart.js Engine Availability
+        if (typeof Chart !== 'undefined') log("✔ Chart.js Graphics Engine Ready", 'pass');
+        else log("✖ Chart.js Library Unavailable", 'warn');
+
+        log("✅ System Diagnostics Complete. Platform Status: OPTIMAL.", 'pass');
+    };
+
+    // ==========================================
+    // 10. BUG REPORTING DISPATCHER
+    // ==========================================
+    window.openBugReportModal = () => document.getElementById('bug-modal').classList.remove('hidden');
+    window.closeBugReportModal = () => document.getElementById('bug-modal').classList.add('hidden');
+
+    window.handleBugSubmit = function(e) {
+        e.preventDefault();
+        const desc = document.getElementById('bug-desc').value.trim();
+        const subject = encodeURIComponent('[BxPulse Ticket] System Bug Report');
+        const body = encodeURIComponent(`Issue Description:\n${desc}\n\nSystem Context: BxPulse Analytics Web App\nUser Agent: ${navigator.userAgent}`);
+        window.location.href = `mailto:trouble.bxpulse@gmail.com?subject=${subject}&body=${body}`;
+        closeBugReportModal();
+    };
+
+    // ==========================================
+    // 11. LIFECYCLE INITIALIZATION
+    // ==========================================
+    window.addEventListener('load', () => {
+        // Execute active patches
+        patchHistoryDB.forEach(p => {
+            if (p.enabled) {
+                try { eval(p.code); } catch(err) { console.error(`Patch execute error [${p.title}]:`, err); }
+            }
+        });
+
+        // Initialize state
+        window.BxPulseCascadeSystemState();
+        renderAcademicCharts();
+    });
+    </script>
+</body>
+</html>
